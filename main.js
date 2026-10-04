@@ -405,8 +405,9 @@ function printSteps(steps) {
                                 getById('viewUrl').dataset.raw = getById('viewUrl').dataset.raw + "?view=" + pushid + "&scene";
                                 getById('viewUrl').innerText = getById('viewUrl').href;
                             } else {
-                                getById('viewUrl').innerText = getById('viewUrl').href;
                                 getById('viewUrl').dataset.raw = getById('viewUrl').dataset.raw + "?view=" + pushid;
+                                getById('viewUrl').href = getById('viewUrl').dataset.raw;
+                                getById('viewUrl').innerText = getById('viewUrl').href;
                             }
                             
                             exampleElement.innerText = answer.label;
@@ -532,7 +533,22 @@ function setStringParam(url, target, param, input, type){
         console.log("Changing a text input field");
         console.log(`${param} - ${target}`)
 
-        if (input.value != ""){
+        if (param == '&pw' || (param == '&room' && target == 'directorUrl')) {
+            // Replace only this query parameter, preserving the other options'
+            // spelling for their existing update handlers.
+            var key = param == '&pw' ? 'pw' : 'dir';
+            var raw = getById(target).dataset.raw;
+            var queryStart = raw.indexOf('?');
+            var base = queryStart == -1 ? raw : raw.slice(0, queryStart);
+            var params = queryStart == -1 ? [] : raw.slice(queryStart + 1).split('&');
+            params = params.filter(function (entry) {
+                return entry != '' && entry.split('=')[0] != key;
+            });
+            if (input.value != "") {
+                params.push(key + '=' + encodeURIComponent(input.value));
+            }
+            getById(target).dataset.raw = base + (params.length ? '?' + params.join('&') : '');
+        } else if (input.value != ""){
             // There's a new value
 		
 		//  ele.value = encodeURIComponent(ele.value);

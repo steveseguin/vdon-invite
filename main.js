@@ -580,12 +580,17 @@ function setStringParam(url, target, param, input, type){
     }
     
     if ((type == "view") && (target == "viewUrl")){
-         if (getById('viewUrl').href.indexOf("&room=") > -1){
-             if (getById('viewUrl').href.indexOf("&scene") == -1){
-                getById('viewUrl').href = getById('viewUrl').href + "&scene";
-                getById('viewUrl').innerText = getById('viewUrl').href;
-             }
+        var viewer = getById('viewUrl');
+        // Keep the room scene flag in the source used by radio/beta updates.
+        if (viewer.dataset.raw.indexOf("&room=") > -1) {
+            if (!/&scene(?=&|$)/.test(viewer.dataset.raw)) {
+                viewer.dataset.raw += "&scene";
+            }
+        } else {
+            viewer.dataset.raw = viewer.dataset.raw.replace(/&scene(?=&|$)/g, "");
         }
+        viewer.href = viewer.dataset.raw;
+        viewer.innerText = viewer.href;
     }    
 }
 
@@ -600,7 +605,9 @@ function setRadioParam(url, target, param, input, type){
     otherGroupInputs.forEach((input) => {
         if ( input.dataset.param != '') {
             console.log("Disabling " + input.dataset.param)
-            getById(target).dataset.raw = getById(target).dataset.raw.replace(input.dataset.param, "");
+            // Match a complete option, not prefixes such as &s in &sl or &ss.
+            var option = input.dataset.param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            getById(target).dataset.raw = getById(target).dataset.raw.replace(new RegExp(option + '(?=&|$)', 'g'), "");
             getById(target).innerText = getById(target).dataset.raw;
             getById(target).href = getById(target).dataset.raw;
         }
